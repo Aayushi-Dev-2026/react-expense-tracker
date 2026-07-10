@@ -61,6 +61,6 @@ An enterprise-grade, high-performance execution ledger built strictly tailored t
 ---
 
 ## 🔗 Live Demo
-**View the site live here:** [Insert your Vercel Link here]
+**View the site live here:** [https://react-expense-tracker-red.vercel.app/]
 
 ---
