@@ -1,35 +1,69 @@
+'use client';
+import { useState, useEffect } from 'react';
+import Navbar from '@/components/Navbar';
 import MovieCard from '@/components/MovieCard';
+import MovieDetailsModal from '@/components/MovieDetailsModal';
 
-async function getMovies() {
-  const API_KEY = process.env.NEXT_PUBLIC_OMDB_API_KEY || 'f88aeb0f';
-  
-  // Valid search query 'Batman' se movies fetch kar rahe hain
-  const res = await fetch(
-    `https://www.omdbapi.com/?apikey=${API_KEY}&s=Batman&type=movie`,
-    { cache: 'no-store' }
-  );
+export default function HomePage() {
+  const [movies, setMovies] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('Batman');
+  const [selectedMovieId, setSelectedMovieId] = useState(null);
 
-  if (!res.ok) {
-    return [];
-  }
+  const fetchMovies = async (query) => {
+    const API_KEY = process.env.NEXT_PUBLIC_OMDB_API_KEY || 'f88aeb0f';
+    try {
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&s=${query}&type=movie`);
+      if (!res.ok) return;
+      
+      const text = await res.text();
+      if (!text) return;
 
-  const data = await res.json();
-  return data.Search || [];
-}
+      const data = JSON.parse(text);
+      setMovies(data.Search || []);
+    } catch (error) {
+      console.error('Error fetching movies:', error);
+    }
+  };
 
-export default async function HomePage() {
-  const movies = await getMovies();
+  useEffect(() => {
+    fetchMovies('Batman');
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      fetchMovies(searchTerm);
+    }
+  };
 
   return (
-    <main style={{ padding: '20px' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px', color: '#fff' }}>
-        Popular Movies
-      </h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
-        {movies.map((movie) => (
-          <MovieCard key={movie.imdbID} movie={movie} />
-        ))}
-      </div>
-    </main>
+    <div>
+      <Navbar 
+        searchTerm={searchTerm} 
+        setSearchTerm={setSearchTerm} 
+        handleSearch={handleSearch} 
+      />
+      <main style={{ padding: '20px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px', color: '#fff' }}>
+          Popular Movies
+        </h1>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+          {movies.map((movie) => (
+            <MovieCard 
+              key={movie.imdbID} 
+              movie={movie} 
+              onSelectMovie={(id) => setSelectedMovieId(id)} 
+            />
+          ))}
+        </div>
+      </main>
+
+      {selectedMovieId && (
+        <MovieDetailsModal 
+          selectedMovie={selectedMovieId} 
+          setSelectedMovie={setSelectedMovieId} 
+        />
+      )}
+    </div>
   );
 }

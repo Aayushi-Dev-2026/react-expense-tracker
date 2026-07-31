@@ -1,107 +1,38 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-const MovieDetailsModal = ({ movie, onClose }) => {
-  if (!movie) return null;
+const MovieDetailsModal = ({ selectedMovie, setSelectedMovie }) => {
+  const [details, setDetails] = useState(null);
+
+  useEffect(() => {
+    if (!selectedMovie) return;
+    const API_KEY = process.env.NEXT_PUBLIC_OMDB_API_KEY || 'f88aeb0f';
+    fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&i=${selectedMovie}&plot=full`)
+      .then((res) => res.json())
+      .then((data) => setDetails(data))
+      .catch((err) => console.error(err));
+  }, [selectedMovie]);
+
+  if (!selectedMovie) return null;
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <button style={styles.closeBtn} onClick={onClose}>✕</button>
-        <div style={styles.content}>
-          <img 
-            src={movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/300x450'} 
-            alt={movie.Title} 
-            style={styles.poster} 
-          />
-          <div style={styles.details}>
-            <h2>{movie.Title} <span style={styles.year}>({movie.Year})</span></h2>
-            <p style={styles.genre}><strong>Genre:</strong> {movie.Genre}</p>
-            <p style={styles.rating}>⭐ <strong>IMDb Rating:</strong> {movie.imdbRating} / 10</p>
-            <p style={styles.plot}><strong>Plot:</strong> {movie.Plot}</p>
-            <p style={styles.cast}><strong>Actors:</strong> {movie.Actors}</p>
-            <p style={styles.meta}><strong>Director:</strong> {movie.Director}</p>
-            <p style={styles.meta}><strong>Runtime:</strong> {movie.Runtime}</p>
-          </div>
-        </div>
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+      <div style={{ backgroundColor: '#181818', color: '#fff', padding: '24px', borderRadius: '8px', maxWidth: '500px', width: '90%', relative: 'relative' }}>
+        {details ? (
+          <>
+            <h2 style={{ margin: '0 0 10px 0', fontSize: '20px' }}>{details.Title} ({details.Year})</h2>
+            <p style={{ fontSize: '13px', color: '#aaa', marginBottom: '10px' }}>{details.Genre} • {details.Runtime} • Rating: {details.imdbRating}</p>
+            <p style={{ fontSize: '14px', lineHeight: '1.5' }}>{details.Plot}</p>
+            <button onClick={() => setSelectedMovie(null)} style={{ marginTop: '20px', padding: '8px 16px', border: 'none', backgroundColor: '#E50914', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}>
+              Close
+            </button>
+          </>
+        ) : (
+          <p>Loading details...</p>
+        )}
       </div>
     </div>
   );
-};
-
-const styles = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.85)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000
-  },
-  modal: {
-    backgroundColor: '#1f1f1f',
-    borderRadius: '8px',
-    padding: '2rem',
-    maxWidth: '700px',
-    width: '90%',
-    position: 'relative',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    border: '1px solid #333'
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: '1rem',
-    right: '1rem',
-    background: 'none',
-    border: 'none',
-    color: '#fff',
-    fontSize: '1.5rem',
-    cursor: 'pointer'
-  },
-  content: {
-    display: 'flex',
-    gap: '1.5rem',
-    flexWrap: 'wrap'
-  },
-  poster: {
-    width: '220px',
-    borderRadius: '6px',
-    objectFit: 'cover'
-  },
-  details: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.6rem'
-  },
-  year: {
-    color: '#aaa',
-    fontSize: '1.1rem'
-  },
-  genre: {
-    color: '#e50914'
-  },
-  rating: {
-    fontSize: '1rem'
-  },
-  plot: {
-    color: '#ccc',
-    lineHeight: '1.4',
-    margin: '0.5rem 0'
-  },
-  cast: {
-    fontSize: '0.9rem',
-    color: '#aaa'
-  },
-  meta: {
-    fontSize: '0.9rem',
-    color: '#aaa'
-  }
 };
 
 export default MovieDetailsModal;
